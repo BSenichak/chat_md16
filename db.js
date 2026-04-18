@@ -1,4 +1,5 @@
 import { createConnection } from "mysql2";
+import { genSalt, hash, compare } from "bcrypt";
 
 let db = createConnection({
     host: "localhost",
@@ -32,22 +33,55 @@ export async function init() {
     }
 }
 
-export async function getMessages(){
-    let [result, fields] = await db.query("SELECT m.id, m.content, u.login as author FROM message m JOIN user u ON m.author_id = u.id")
-    console.log(result)
-    return result
+export async function getMessages() {
+    let [result, fields] = await db.query(
+        "SELECT m.id, m.content, u.login as author FROM message m JOIN user u ON m.author_id = u.id",
+    );
+    console.log(result);
+    return result;
 }
 
-getMessages()
+// getMessages();
 
-export async function addMessage(user_id, content){
-    try{
-        db.query("INSERT INTO message(author_id, content) VALUES (?, ?)", [user_id, content])
-    }catch(error){
-        console.log(`DB error: ${error.message}`)
+export async function addMessage(user_id, content) {
+    try {
+        db.query("INSERT INTO message(author_id, content) VALUES (?, ?)", [
+            user_id,
+            content,
+        ]);
+    } catch (error) {
+        console.log(`DB error: ${error.message}`);
     }
 }
 
 // addMessage(1, "How are you?")
+
+export async function isUserExist(login) {
+    const [result, fields] = await db.query(
+        "SELECT * FROM user WHERE login = ?",
+        [login],
+    );
+    return result.length > 0;
+}
+
+export async function addUser(login, password) {
+    try {
+        let salt = await genSalt(10);
+        let hashedPassword = await hash(password, salt);
+
+        login = login.toLowerCase();
+
+        await db.query("INSERT INTO user(login, password) VALUES(?, ?)", [
+            login,
+            hashedPassword,
+        ]);
+        return true
+    } catch (error) {
+        console.log(error)
+        return false
+    }
+}
+
+
 
 export default db;
