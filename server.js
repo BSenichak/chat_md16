@@ -157,7 +157,7 @@ async function loginUser(req, res, data){
         res.end("incorrect credentials")
         return
     }
-    let token = jwt.sign({id: user.id, login: user.login}, "abc", {expiresIn: "1h"})
+    let token = jwt.sign({id: user.id, login: user.login}, process.env.SECRET, {expiresIn: "1h"})
     res.status = 200
     res.end(token)
 }
@@ -167,7 +167,7 @@ function getCredentials(c = ""){
     const token = cookies?.token
     if (!token) return null
     try{
-        let user = jwt.verify(token, "abc")
+        let user = jwt.verify(token, process.env.SECRET)
         return user
     }catch(error){
         console.log(error.message)
